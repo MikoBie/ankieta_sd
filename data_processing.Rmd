@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Wyniki ankiety SD UW"
 output: 
   
   bookdown::html_document2:
@@ -41,14 +41,14 @@ COLORS <- c("#123e65",
 
 
 ```{r get_data}
-data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ 1.csv")
+data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ 1-2.csv")
 
 QUESTION_LOOKUP <- tibble(polski = colnames(data)[51:98],
                           english = colnames(data)[3:50]) %>%
   mutate(qn = paste0("qn_", 1:n())) %>%
   select(qn, polski, english) 
 
-data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ 1.csv") %>%
+data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ 1-2.csv") %>%
   rename(time = "Sygnatura czasowa",
          language = "Please select the language (choose wisely)") %>%
   mutate(id = 1:n()) %>%
@@ -109,13 +109,23 @@ data_wide <- data %>%
          
 ```
 
-# Ankietowani
+# Wstęp
+
+Wyniki ankiety są podzielone na 12 różnych kategorii. Po lewej stronie znajduje się menu, w którym wypisane są wszystkie kategorie. W większości kategorii można wybrać jedną z trzech możliwości: 
+
+* wyświetlić wyniki na wykresach słupkowych, 
+* wyświetlić wyniki w tabelach (to jest to samo co na wykresach, choć można tam znaleźć brakujące w opisach liczebności),
+* wyświetlić tabele z odpowiedziami na pytania otwarte. 
+
+W opisach wykresów i tabeli znajduje się podsumowanie przedstawionych w nich najważniejszych informacji.
+
+# Ankietowani {.tabset}
+
+## Wykresy
 
 ```{r affiliation-plot, fig.height = 6, layout="l-body-outset", fig.cap=cap}
-suma <- data_wide
-
 cap <- sprintf(
-  "W Anikiecie wzięło udział w sumie %.0f doktorantek i doktorantów, z czego %.0f kształci się na studiach doktoranckich, a %.0f w szkołach doktorskich. Najliczeniejszą reprezentację w badaniu miał %s z którego w badaniu wzięło udział %i doktorantek i doktorantów.",
+  "W Ankiecie wzięło udział w sumie %.0f doktorantek i doktorantów, z czego %.0f kształci się na studiach doktoranckich, a %.0f w szkołach doktorskich. Najliczniejszą reprezentację w badaniu miał %s z którego w ankiecie wzięło udział %i doktorantek i doktorantów.",
   data_wide %>% nrow,
   compute_number(question = position, response = "Studia Doktoranckie"),
   compute_number(question = position, response = "Szkoła Doktorska"),
@@ -147,6 +157,7 @@ data_wide %>%
   scale_fill_manual(values=COLORS[1:2], limits = c("Studia Doktoranckie", "Szkoła Doktorska")) +
   theme(legend.position="bottom", legend.title = element_blank())
 ```
+
 ```{r science-plot, layout="l-body-outset", fig.cap=cap}
 order_sciencies <- data_wide %>%
   filter(science_label != "") %>%
@@ -170,7 +181,7 @@ data_wide %>%
   scale_fill_manual(values=COLORS[1:2], limits = c("Studia Doktoranckie", "Szkoła Doktorska")) +
   theme(legend.position="bottom", legend.title = element_blank())
 cap <- sprintf(
-  "Z %i doktorantek i doktorantów, którzy wzięli udział w badaniu najwięcej reprezentowało %s - %i; %s reprezentowało %i, a %s - %i (dla 13 doktorantek i doktorantów nie udało się ustalić dziedziny nauki).",
+  "Z %i doktorantek i doktorantów, którzy wzięli udział w badaniu najwięcej reprezentowało %s - %i; %s reprezentowało %i, a %s - %i (dla 9 doktorantek i doktorantów nie udało się ustalić dziedziny nauki).",
   data_wide %>% nrow,
   data_wide %>% group_by(science_label) %>% summarise(count = n()) %>% arrange(desc(count)) %>% slice(1) %>% pull(science_label),
   data_wide %>% group_by(science_label) %>% summarise(count = n()) %>% arrange(desc(count)) %>% slice(1) %>% pull(count),
@@ -180,9 +191,38 @@ cap <- sprintf(
   data_wide %>% group_by(science_label) %>% summarise(count = n()) %>% arrange(desc(count)) %>% slice(3) %>% pull(count))
 ```
 
-# Stypendium i Socjal
+## Tabela
 
-Pytania dotyczące stypendium naukowego oczywiście dotyczyło wyłącznie doktorantek i doktorantów, którzy są na studiach doktoranckich. Na razie nie analizowałem pytań otwartych, liczę na to, że znajdę na to trochę czasu w najbliższy weekend. Może w tych odpowiedziach otwartych jest jakieś rozwiązanie co zrobić z kryteriami stypendiów.
+```{r affiliation-table, layout="l-body-outset"}
+cap <- sprintf(
+  "W Ankiecie wzięło udział w sumie %.0f doktorantek i doktorantów, z czego %.0f kształci się na studiach doktoranckich, a %.0f w szkołach doktorskich. Najliczniejszą reprezentację w badaniu miał %s z którego w ankiecie wzięło udział %i doktorantek i doktorantów.",
+  data_wide %>% nrow,
+  compute_number(question = position, response = "Studia Doktoranckie"),
+  compute_number(question = position, response = "Szkoła Doktorska"),
+  data_wide %>% group_by(faculty_label) %>% summarise(count = n()) %>% arrange(desc(count)) %>% slice(1) %>% pull(faculty_label),
+  data_wide %>% group_by(faculty_label) %>% summarise(count = n()) %>% arrange(desc(count)) %>% slice(1) %>% pull(count)
+  )
+
+data_wide %>%
+  filter(!is.na(faculty_label)) %>%
+  filter(! faculty_shortcut %in% c("MSD UW", "SDNS UW", "SDNH UW", "SDNŚiP UW")) %>%
+  group_by(faculty_label, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename(Jednostka = faculty_label,
+         "Rodzaj kształcenia" = position) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+      
+```
+
+# Stypendium i Socjal {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_3")`**
 
 ```{r przewod-plot, layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_3,
@@ -192,13 +232,14 @@ plot_con_questions(question = qn_3,
                    reorder = FALSE,
                    ymin = 195,
                    ymax = 225,
-                   COLORS = COLORS[2:1],
-                   plot_title = question_show(question = "qn_3"))
+                   COLORS = COLORS[2:1])
 cap <- sprintf(
   "Wśród %i doktorantek i doktorantów, którzy przygotowują rozprawę doktorską w ramach studiów doktoranckich ponad połowa (%i) obawia się, że w związku z pandemią koronawirusa może mieć problem z otrzymaniem stypendium w przyszłym roku akademickim.",
   compute_number(question = qn_3, response = "Tak") + compute_number(question = qn_3, response = "Nie"),
   compute_number(question = qn_3, response = "Tak"))
 ```
+
+**`r question_show(question = "qn_3")`**
 
 ```{r przewod-plot-2, layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_3,
@@ -209,27 +250,51 @@ plot_con_questions(question = qn_3,
                    ymin = 195,
                    ymax = 225,
                    COLORS = COLORS[2:1],
-                   legend_title = "Czy w związku z wprowadzonymi przez Rząd restrykcjami utraciłaś / utraciłeś źródło dochodu?",
-                   plot_title = question_show(question = "qn_3"))
+                   legend_title = question_show(question = "qn_34"))
 cap <- sprintf(
-  "Wśród %i doktorantek i doktorantów, którzy obawiają się, że w związku z pandemią koronawirusa mogą mieć problem z uzyskaniem stypendium w przyszłym roku %i utraciło źródło dochodu w konsekwencji restrykcji wprowadzonych przez Rząd. W grupie %i doktorantek i doktorantów, którzy nie obawiają się, że w związku z pandemią koronawirusa mogą mieć problem z uzyskaniem stypendium w przyszłym roku %i utraciło źródło dochodu.",
+  "Wśród %i doktorantek i doktorantów, którzy obawiają się, że w związku z pandemią koronawirusa mogą mieć problem z uzyskaniem stypendium w przyszłym roku akademickim, %i utraciło źródło dochodu w konsekwencji restrykcji wprowadzonych przez Rząd. W grupie %i doktorantek i doktorantów, którzy nie obawiają się, że w związku z pandemią koronawirusa mogą mieć problem z uzyskaniem stypendium w przyszłym roku akademickim, %i utraciło źródło dochodu.",
   compute_number(question = qn_3, response = "Tak"),
   compute_number(question = qn_3, response = "Tak", conditional = TRUE, question2 = qn_34, response2 = "Tak"),
   compute_number(question = qn_3, response = "Nie"),
   compute_number(question = qn_3, response = "Nie", conditional = TRUE, question2 = qn_34, response2 = "Tak"))
 ```
 
-# Obrona przed 2021
+## Tabele
 
-To moim zdaniem jest dość wymowne. Niby jest jeszcze ponad półtora roku i dopiero nic nie robimy miesiąc, a osoby z otwartymi przewodami mają już te przewody otwarte przynajmniej od roku, to jednak wyobrażam sobie, że są osoby, które jeszcze przez jakiś czas nie będą mogły skończyć badań. Co w jakimś stopniu jest zaskakujące to fakt, że najwięcej jest osób z nauk humanistycznych, które deklarują, że będą mieć problem z obroną przed grudniem 2021.
+```{r przewod-table-2, layout="l-body-outset"}
+cap <- sprintf(
+  "Wśród %i doktorantek i doktorantów, którzy obawiają się, że w związku z pandemią koronawirusa mogą mieć problem z uzyskaniem stypendium w przyszłym roku akademickim, %i utraciło źródło dochodu w konsekwencji restrykcji wprowadzonych przez Rząd. W grupie %i doktorantek i doktorantów, którzy nie obawiają się, że w związku z pandemią koronawirusa mogą mieć problem z uzyskaniem stypendium w przyszłym roku akademickim, %i utraciło źródło dochodu.",
+  compute_number(question = qn_3, response = "Tak"),
+  compute_number(question = qn_3, response = "Tak", conditional = TRUE, question2 = qn_34, response2 = "Tak"),
+  compute_number(question = qn_3, response = "Nie"),
+  compute_number(question = qn_3, response = "Nie", conditional = TRUE, question2 = qn_34, response2 = "Tak"))
+make_table(question = qn_3,
+           conditional = TRUE,
+           question2 = qn_34,
+           cap = cap)
+
+```
+
+## Otwarte
+
+```{r qn4-table, layout="l-body-outset"}
+make_open_table(question = qn_4,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak’’ w pytaniu dotyczącym obniżenia szans na uzyskanie stypendium naukowego w przyszłym roku akademickim, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać? Czy np. zmiana kryteriów przyznawania stypendiów mogłaby być przydatna? Jeśli tak, na czym miałaby polegać ta zmiana?")
+```
+
+# Obrona przed 2021 {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_6")`**
 
 ```{r obrona-plot,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_6,
                    conditional = TRUE,
                    question2 = science_label,
                    COLORS = COLORS[1:3],
-                   legend = TRUE,
-                   plot_title = question_show(question = "qn_6"))
+                   legend = TRUE)
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Najwięcej bo %i doktorantek i doktorantów, którzy obawiają czy zdążą się obronić przed grudniem 2021 reprezentuje Nauki Humanistyczne, Nauki Społeczne - %i, a Nauki Ścisłe i Przyrodnicze - %i (u dwóch osób ciężko jest zidentyfikować dziedzinę nauki).",
   compute_number(question = qn_6, response = "Tak") + compute_number(question = qn_6, response = "Nie"),
@@ -240,14 +305,15 @@ cap <- sprintf(
   )
 ```
 
+**`r question_show(question = "qn_6")`**
+
 ```{r obrona-plot-2,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_6,
                    conditional = TRUE,
                    question2 = qn_39,
                    COLORS = COLORS[2:1],
                    legend = TRUE,
-                   legend_title = "Czy ograniczenia na UW wpływają na badania do Twojego Doktoratu?",
-                   plot_title = question_show(question = "qn_6"))
+                   legend_title = question_show(question = "qn_39"))
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Co więcej dla większości tych doktorantów i doktorantek (%i!) ograniczenia związane z pandemią koronawirusa, w tym te w funkcjonowaniu Uniwersytetu Warszawskiego, wpływają na realizację badań w przygotowywanej rozprawie doktorskiej. W przypadku osób, które nie obawiają się wpływu pandemii na obronę przed grudniem 2021, nie może realizować badań do doktoratu ponad połowa - %i.",
   compute_number(question = qn_6, response = "Tak") + compute_number(question = qn_6, response = "Nie"),
@@ -257,14 +323,15 @@ cap <- sprintf(
   )
 ```
 
+**`r question_show(question = "qn_6")`**
+
 ```{r obrona-plot-3,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_6,
                    conditional = TRUE,
                    question2 = scale,
                    COLORS = COLORS[2:1],
                    legend = TRUE,
-                   legend_title = "Na ile zmienił się Twój kontakt z Promotorem / Promotorką?",
-                   plot_title = question_show(question = "qn_6"))
+                   legend_title = "Na ile zmienił się Twój kontakt z Promotorem / Promotorką?")
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Jednak tylko %i doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie uważa, ze ich kontakt z Promotorem / Promotorką się pogorszył.",
   compute_number(question = qn_6, response = "Tak") + compute_number(question = qn_6, response = "Nie"),
@@ -272,6 +339,9 @@ cap <- sprintf(
   compute_number(question = qn_6, response = "Tak", conditional = TRUE, question2 = scale, response2 = "Jest gorzej")
   )
 ```
+
+**`r question_show(question = "qn_6")`**
+
 ```{r obrona-plot-4,  layout="l-body-outset", fig.cap=cap}
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Jednak tylko %i doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia na studiach doktoranckich.",
@@ -282,25 +352,124 @@ cap <- sprintf(
 plot_con_questions(question = qn_6,
                    conditional = TRUE,
                    question2 = qn_44,
-                   legend_title = "Czy obawiasz się aktualna sytuacja wpływa na terminową realizację programów studiów doktoranckich?",
+                   legend_title = question_show(question = "qn_44"),
                    COLOR = COLORS[2:1],
                    ymin = 300,
-                   ymax = 330,
-                   plot_title = question_show(question = "qn_6"))
+                   ymax = 330)
 ```
 
+## Tabele
 
-# Procedura Nadania Stopnia
+```{r obrona-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Najwięcej bo %i doktorantek i doktorantów, którzy obawiają czy zdążą się obronić przed grudniem 2021 reprezentuje Nauki Humanistyczne, Nauki Społeczne - %i, a Nauki Ścisłe i Przyrodnicze - %i (u dwóch osób ciężko jest zidentyfikować dziedzinę nauki).",
+  compute_number(question = qn_6, response = "Tak") + compute_number(question = qn_6, response = "Nie"),
+  compute_number(question = qn_6, response = "Tak"),
+  compute_number(question = qn_6, response = "Tak", conditional = TRUE, question2 = science_label, response2 = "Nauki Humanistyczne"),
+  compute_number(question = qn_6, response = "Tak", conditional = TRUE, question2 = science_label, response2 = "Nauki Społeczne"),
+  compute_number(question = qn_6, response = "Tak", conditional = TRUE, question2 = science_label, response2 = "Nauki Ścisłe i Przyrodnicze")
+  )
+data_wide %>%
+  filter(!is.na(qn_6)) %>%
+  filter(science_label != "") %>%
+  group_by(qn_6, science_label) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Dziedzina nauki" = science_label,
+         !!question_show(question = "qn_6") := qn_6) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+  
+```
+
+```{r obrona-table-2,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Co więcej dla większości tych doktorantów i doktorantek (%i!) ograniczenia związane z pandemią koronawirusa, w tym te w funkcjonowaniu Uniwersytetu Warszawskiego, wpływają na realizację badań w przygotowywanej rozprawie doktorskiej. W przypadku osób, które nie obawiają się wpływu pandemii na obronę przed grudniem 2021, nie może realizować badań do doktoratu ponad połowa - %i.",
+  compute_number(question = qn_6, response = "Tak") + compute_number(question = qn_6, response = "Nie"),
+  compute_number(question = qn_6, response = "Tak"),
+  compute_number(question = qn_6, response = "Tak", conditional = TRUE, question2 = qn_39, response2 = "Tak"),
+  compute_number(question = qn_6, response = "Nie", conditional = TRUE, question2 = qn_39, response2 = "Tak")
+  )
+make_table(question = qn_6,
+           conditional = TRUE,
+           question2 = qn_39,
+           cap = cap)
+```
+
+```{r obrona-table-3,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Jednak tylko %i doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie uważa, ze ich kontakt z Promotorem / Promotorką się pogorszył.",
+  compute_number(question = qn_6, response = "Tak") + compute_number(question = qn_6, response = "Nie"),
+  compute_number(question = qn_6, response = "Tak"),
+  compute_number(question = qn_6, response = "Tak", conditional = TRUE, question2 = scale, response2 = "Jest gorzej")
+  )
+data_wide %>%
+  filter(!is.na(qn_6)) %>%
+  filter(scale != "") %>%
+  group_by(qn_6, scale) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Na ile zmienił się Twój kontakt z Promotorem / Promotorką?" = scale,
+         !!question_show(question = "qn_6") := qn_6) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+```{r obrona-table-4,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy mają otwarty przewód doktorski ponad połowa (%i) uważa, że aktualna sytuacja może utrudnić im obronę przed grudniem 2021. Jednak tylko %i doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia na studiach doktoranckich.",
+  compute_number(question = qn_6, response = "Tak") + compute_number(question = qn_6, response = "Nie"),
+  compute_number(question = qn_6, response = "Tak"),
+  compute_number(question = qn_6, response = "Tak", conditional = TRUE, question2 = qn_44, response2 = "Tak"))
+make_table(question = qn_6,
+           conditional = TRUE,
+           question2 = qn_44,
+           cap = cap)
+```
+
+## Otwarte
+
+```{r qn7-table, layout="l-body-outset"}
+make_open_table(question = qn_7,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak’’ w pytaniu dotyczącym problemów z obroną przed grudniem 2021, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+```{r table-qn40-przewod}
+temp_table <- data_wide %>%
+  filter(!is.na(qn_6))
+make_open_table(table = temp_table,
+                question = qn_40,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak'' w pytaniu dotyczącym wpływu ograniczeń na realizowane przez Ciebie badania, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+```{r table-qn45-przewod}
+temp_table <- data_wide %>%
+  filter(!is.na(qn_6))
+make_open_table(table = temp_table,
+                question = qn_45,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak'' w pytaniu dotyczącym wpływu ograniczeń na Twoją możliwość terminowej realizacji programu studiów doktoranckich, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+# Procedura Nadania Stopnia {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_9")`**
 
 ```{r obrona-procedura,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_9,
                    conditional = TRUE,
                    question2 = qn_8,
-                   legend_title = "Czy w bieżącym roku akademickim zamierzasz wszcząć procedurę nadania stopnia doktora?",
+                   legend_title = question_show(question = "qn_8"),
                    COLORS = COLORS[2:1],
                    ymin = 170,
-                   ymax = 200,
-                   plot_title = question_show(question = "qn_9"))
+                   ymax = 200)
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, które są na studiach doktoranckich i nie mają otwartego przewodu, zdecydowana większość (%i) uważa, że aktualna sytuacja nie wpłynie na ich plany rozpoczęcia procedury nadania stopnia doktora. Jednak warto zauważyć, że aż %i z %i osób, które uważają, że aktualna sytuacja wpłynie na procedurę rozpoczęcia nadania stopnia doktora planowało wszcząć procedurę nadania stopnia doktora w tym roku akademickim.",
   compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
@@ -308,14 +477,15 @@ cap <- sprintf(
   compute_number(question = qn_9, response = "Tak"))
 ```
 
+**`r question_show(question = "qn_9")`**
+
 ```{r obrona-procedura-2,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_9,
                    conditional = TRUE,
                    question2 = qn_39,
                    COLORS = COLORS[2:1],
                    legend = TRUE,
-                   legend_title = "Czy ograniczenia na UW wpływają na badania do Twojego Doktoratu",
-                   plot_title = question_show(question = "qn_9"))
+                   legend_title = question_show(question = "qn_39"))
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęcie przez nich procedury nadania stopnia doktora. Jednak aż dla %i z %i osób, dla których ograniczenia związane z pandemią koronawirusa, wpływają na wszczęcie procedury nadania stopnia doktora równocześnie ograniczenia wpływają na przeprowadzenie badań do przygotowywanej rozprawie doktorskiej. W przypadku osób, które nie obawiają się wpływu pandemii na wszczęcie procedury nadania stopnia doktora, nie może realizować badań aż %i.",
   compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
@@ -326,24 +496,28 @@ cap <- sprintf(
   )
 ```
 
+**`r question_show(question = "qn_9")`**
+
 ```{r obrona-procedura-3,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_9,
                    conditional = TRUE,
                    question2 = scale,
                    COLORS = COLORS[2:1],
                    legend = TRUE,
-                   legend_title = "Na ile zmienił się Twój kontakt z Opiekunką / Opiekunem",
-                   plot_title = question_show(question = "qn_9"))
+                   legend_title = "Na ile zmienił się Twój kontakt z Opiekunką / Opiekunem noaukowym?")
 cap <- sprintf(
-  "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęście przez nich procedury nadania stopnia doktora. Tylko %i doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie uważa, ze ich kontakt z Promotorem / Promotorką się pogorszył.",
+  "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęcie przez nich procedury nadania stopnia doktora. Tylko %i doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie uważa, ze ich kontakt z Promotorem / Promotorką się pogorszył.",
   compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
   compute_number(question = qn_9, response = "Nie"),
   compute_number(question = qn_9, response = "Tak", conditional = TRUE, question2 = scale, response2 = "Jest gorzej")
   )
 ```
+
+**`r question_show(question = "qn_9")`**
+
 ```{r obrona-procedura-4,  layout="l-body-outset", fig.cap=cap}
 cap <- sprintf(
-  "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęście przez nich procedury nadania stopnia doktora. Jednak prawie połowa (%i z %i) doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia na studiach doktoranckich.",
+  "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęcie przez nich procedury nadania stopnia doktora. Jednak prawie połowa (%i z %i) doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia na studiach doktoranckich.",
   compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
   compute_number(question = qn_9, response = "Nie"),
   compute_number(question = qn_9, response = "Tak", conditional = TRUE, question2 = qn_44, response2 = "Tak"),
@@ -352,14 +526,106 @@ cap <- sprintf(
 plot_con_questions(question = qn_9,
                    conditional = TRUE,
                    question2 = qn_44,
-                   legend_title = "Czy ograniczenia wpływają na terminową realizację kształcenia?",
+                   legend_title = question_show(question = "qn_44"),
                    COLOR = COLORS[2:1],
                    ymin = 300,
-                   ymax = 330,
-                   plot_title = question_show(question = "qn_9"))
+                   ymax = 330)
 ```
 
-# IPB
+## Tabele
+
+```{r obrona-procedura-table,  layout="l-body-outset", fig.cap=cap}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, które są na studiach doktoranckich i nie mają otwartego przewodu, zdecydowana większość (%i) uważa, że aktualna sytuacja nie wpłynie na ich plany rozpoczęcia procedury nadania stopnia doktora. Jednak warto zauważyć, że aż %i z %i osób, które uważają, że aktualna sytuacja wpłynie na procedurę rozpoczęcia nadania stopnia doktora planowało wszcząć procedurę nadania stopnia doktora w tym roku akademickim.",
+  compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
+  compute_number(question = qn_9, response = "Nie"), compute_number(question = qn_9, response = "Tak", conditional = TRUE, question2 = qn_8, response2 = "Tak"),
+  compute_number(question = qn_9, response = "Tak"))
+make_table(question = qn_9,
+           conditional = TRUE,
+           question2 = qn_8,
+           cap = cap)
+```
+
+```{r obrona-procedura-table-2,  layout="l-body-outset", fig.cap=cap}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęcie przez nich procedury nadania stopnia doktora. Jednak aż dla %i z %i osób, dla których ograniczenia związane z pandemią koronawirusa, wpływają na wszczęcie procedury nadania stopnia doktora równocześnie ograniczenia wpływają na przeprowadzenie badań do przygotowywanej rozprawie doktorskiej. W przypadku osób, które nie obawiają się wpływu pandemii na wszczęcie procedury nadania stopnia doktora, nie może realizować badań aż %i.",
+  compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
+  compute_number(question = qn_9, response = "Nie"),
+  compute_number(question = qn_9, response = "Tak", conditional = TRUE, question2 = qn_39, response2 = "Tak"),
+  compute_number(question = qn_9, response = "Tak"),
+  compute_number(question = qn_9, response = "Nie", conditional = TRUE, question2 = qn_39, response2 = "Tak")
+  )
+make_table(question = qn_9,
+           conditional = TRUE,
+           question2 = qn_39,
+           cap = cap)
+```
+
+```{r obrona-procedura-table-3,  layout="l-body-outset", fig.cap=cap}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęście przez nich procedury nadania stopnia doktora. Tylko %i doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie uważa, ze ich kontakt z Promotorem / Promotorką się pogorszył.",
+  compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
+  compute_number(question = qn_9, response = "Nie"),
+  compute_number(question = qn_9, response = "Tak", conditional = TRUE, question2 = scale, response2 = "Jest gorzej")
+  )
+data_wide %>%
+  filter(!is.na(qn_9)) %>%
+  filter(scale != "") %>%
+  group_by(qn_9, scale) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Na ile zmienił się Twój kontakt z Promotorem / Promotorką?" = scale,
+         !!question_show(question = "qn_9") := qn_9) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+
+```{r obrona-procedura-table-4,  layout="l-body-outset", fig.cap=cap}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy nie mają otwartego przewodu doktorskiego zdecydowana większość  (%i) uważa, że aktualna sytuacja nie wpłynie na wszczęście przez nich procedury nadania stopnia doktora. Jednak prawie połowa (%i z %i) doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia na studiach doktoranckich.",
+  compute_number(question = qn_9, response = "Tak") + compute_number(question = qn_9, response = "Nie"),
+  compute_number(question = qn_9, response = "Nie"),
+  compute_number(question = qn_9, response = "Tak", conditional = TRUE, question2 = qn_44, response2 = "Tak"),
+  compute_number(question = qn_9, response = "Tak"))
+make_table(question = qn_9,
+           conditional = TRUE,
+           question2 = qn_44,
+           cap = cap)
+```
+
+## Otwarte
+
+```{r qn10-table, layout="l-body-outset"}
+make_open_table(question = qn_10,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak’’ w pytaniu dotyczącym problemów z wszczęciem postępowania nadania stopnia doktora, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+```{r table-qn40-procedura}
+temp_table <- data_wide %>%
+  filter(!is.na(qn_9))
+make_open_table(table = temp_table,
+                question = qn_40,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak'' w pytaniu dotyczącym wpływu ograniczeń na realizowane przez Ciebie badania, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+```{r table-qn45-procedura}
+temp_table <- data_wide %>%
+  filter(!is.na(qn_9))
+make_open_table(table = temp_table,
+                question = qn_45,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak'' w pytaniu dotyczącym wpływu ograniczeń na Twoją możliwość terminowej realizacji programu studiów doktoranckich, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+# IPB {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_11")`**
 
 ```{r obrona-plan,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_11,
@@ -368,8 +634,7 @@ plot_con_questions(question = qn_11,
                    COLORS = COLORS,
                    legend = TRUE,
                    ymax = 54,
-                   ymin = 47,
-                   plot_title = question_show(question = "qn_11"))
+                   ymin = 47)
 cap <- sprintf(
   "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, ponad połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Najwięcej takich doktorantek i doktorantów reprezentuje Nauki Humanistyczne - %i, Nauki Ścisłe i Przyrodnicze - %i, a Nauki Społeczne - %i (u jednej osoby ciężko było zidentyfikować dziedzinę nauki).",
   compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
@@ -380,14 +645,15 @@ cap <- sprintf(
   )
 ```
 
+**`r question_show(question = "qn_11")`**
+
 ```{r obrona-plan-2,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_11,
                    conditional = TRUE,
                    question2 = qn_39,
                    COLORS = COLORS[2:1],
                    legend = TRUE,
-                   legend_title = "Czy ograniczenia na UW wpływają na badania do Twojego Doktoratu",
-                   plot_title = question_show(question = "qn_11"))
+                   legend_title = question_show(question = "qn_39"))
 cap <- sprintf(
   "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Większość (%i!) z tych, dla których będzie to problem równocześnie nie może prowadzić badań do doktoratu. W przypadku osób, które nie obawiają się wpływu pandemii na przygotowanie Indywidualnego Planu Badawczego, nie może realizować badań %i osób.",
   compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
@@ -397,14 +663,15 @@ cap <- sprintf(
   )
 ```
 
+**`r question_show(question = "qn_11")`**
+
 ```{r obrona-plan-3,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_11,
                    conditional = TRUE,
                    question2 = scale,
                    COLORS = COLORS[2:1],
                    legend = TRUE,
-                   legend_title = "Na ile zmienił się Twój kontakt z Promotorem / Promotorką",
-                   plot_title = question_show(question = "qn_11"))
+                   legend_title = "Na ile zmienił się Twój kontakt z Promotorem / Promotorką?")
 cap <- sprintf(
   "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Prawie połowa (%i) doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie uważa, ze ich kontakt z Promotorem / Promotorką się pogorszył. Wśród tych, którzy nie obawiają się, że będą mieć problem z przygotowaniem Indywidualnego Planu Badawczego tylko %i osób uważa, że ich kontakt się pogorszył.",
   compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
@@ -413,6 +680,8 @@ cap <- sprintf(
   compute_number(question = qn_11, response = "Nie", conditional = TRUE, question2 = scale, response2 = "Jest gorzej")
   )
 ```
+
+**`r question_show(question = "qn_11")`**
 
 ```{r obrona-plan-4,  layout="l-body-outset", fig.cap=cap}
 cap <- sprintf(
@@ -424,24 +693,118 @@ cap <- sprintf(
 plot_con_questions(question = qn_11,
                    conditional = TRUE,
                    question2 = qn_44,
-                   legend_title = "Czy ograniczenia wpływają na terminową realizację kształcenia?",
+                   legend_title = question_show(question = "qn_44"),
                    COLOR = COLORS[2:1],
                    ymin = 300,
-                   ymax = 330,
-                   plot_title = question_show(question = "qn_11"))
+                   ymax = 330)
 ```
 
-# Uczenie
+## Tabele
+
+```{r obrona-plan-table-4,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, ponad połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Prawie połowa (%i) doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia w szkole doktorskiej (Mikołaj: w sumie wszyscy powinni się obawiać, bo przecież przygotowanie IPB jest częścią terminowej realizacji kształcenia).",
+  compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
+  compute_number(question = qn_11, response = "Tak"),
+  compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = qn_44, response2 = "Tak"))
+
+make_table(question = qn_11,
+           conditional = TRUE,
+           question2 = qn_44,
+           cap = cap)
+```
+
+```{r obrona-plan-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, ponad połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Najwięcej takich doktorantek i doktorantów reprezentuje Nauki Humanistyczne - %i, Nauki Ścisłe i Przyrodnicze - %i, a Nauki Społeczne - %i (u jednej osoby ciężko było zidentyfikować dziedzinę nauki).",
+  compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
+  compute_number(question = qn_11, response = "Tak"),
+  compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = science_label, response2 = "Nauki Humanistyczne"),
+  compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = science_label, response2 = "Nauki Społeczne"),
+  compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = science_label, response2 = "Nauki Ścisłe i Przyrodnicze")
+  )
+
+```
+
+
+```{r obrona-plan-table-2,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Większość (%i!) z tych, dla których będzie to problem równocześnie nie może prowadzić badań do doktoratu. W przypadku osób, które nie obawiają się wpływu pandemii na przygotowanie Indywidualnego Planu Badawczego, nie może realizować badań %i osób.",
+  compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
+  compute_number(question = qn_11, response = "Tak"),
+  compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = qn_39, response2 = "Tak"),
+  compute_number(question = qn_11, response = "Nie", conditional = TRUE, question2 = qn_39, response2 = "Tak")
+  )
+
+make_table(question = qn_11,
+           conditional = TRUE,
+           question2 = qn_39,
+           cap = cap)
+```
+
+```{r obrona-plan-table-3,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Prawie połowa (%i) doktorantek i doktorantów, którzy będą mieć ten problem jednocześnie uważa, ze ich kontakt z Promotorem / Promotorką się pogorszył. Wśród tych, którzy nie obawiają się, że będą mieć problem z przygotowaniem Indywidualnego Planu Badawczego tylko %i osób uważa, że ich kontakt się pogorszył.",
+  compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
+  compute_number(question = qn_11, response = "Tak"),
+  compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = scale, response2 = "Jest gorzej"),
+  compute_number(question = qn_11, response = "Nie", conditional = TRUE, question2 = scale, response2 = "Jest gorzej")
+  )
+
+data_wide %>%
+  filter(!is.na(qn_11)) %>%
+  filter(scale != "") %>%
+  group_by(qn_11, scale) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Na ile zmienił się Twój kontakt z Promotorem / Promotorką?" = scale,
+         !!question_show(question = "qn_11") := qn_11) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+
+## Otwarte
+
+```{r qn12-table, layout="l-body-outset"}
+make_open_table(question = qn_12,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak'' w pytaniu dotyczącym problemów z przygotowaniem planu badawczego, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+```{r table-qn44-ipb}
+temp_table <- data_wide %>%
+  filter(!is.na(qn_11))
+make_open_table(table = temp_table,
+                question = qn_40,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak'' w pytaniu dotyczącym wpływu ograniczeń na realizowane przez Ciebie badania, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+```{r table-qn45-ipb}
+temp_table <- data_wide %>%
+  filter(!is.na(qn_9))
+make_open_table(table = temp_table,
+                question = qn_45,
+                defualt_cap = FALSE,
+                custom_cap = "Jeśli odpowiedziałaś / odpowiedziałeś ,,Tak'' w pytaniu dotyczącym wpływu ograniczeń na Twoją możliwość terminowej realizacji kształcenia w szkole doktorskiej, to napisz na czym polega ten problem i co Uniwersytet Warszawski może zrobić, żeby pomóc Ci go rozwiązać?")
+```
+
+# Uczenie {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_14")`**
 
 ```{r zajecia-zdalne,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_14,
                    conditional = TRUE,
                    question2 = qn_17,
-                   legend_title = "Czy masz warunki doprowadzenia zajęć zdalnych?",
+                   legend_title = question_show(question = "qn_17"),
                    ymin = 160,
                    ymax = 190,
-                   COLORS = COLORS[2:1],
-                   plot_title = question_show(question = "qn_14"))
+                   COLORS = COLORS[2:1])
 
 cap <- sprintf(
   "Z %i doktorantek i doktorantów prowadzących zajęcia zdecydowana większość (%i) prowadzi zajęcia zdalnie. Jednak warto zwrócić uwagę na to, że aż %i z doktorantek i doktorantów  z %i doktorantek i doktorantów nieprowadzących zajęć nie ma warunków do prowadzenia zajęć zdalnych.",
@@ -451,15 +814,16 @@ cap <- sprintf(
   compute_number(question = qn_14, response = "Nie"))
 ```
 
+**`r question_show(question = "qn_14")`**
+
 ```{r zajecia-zdalne-pomoc,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_14,
                    conditional = TRUE,
                    question2 = qn_15,
-                   legend_title = "Czy pomagasz prowadzić zajęcia zdalne na Uniwersytecie Warszawskim?",
+                   legend_title = question_show(question = "qn_15"),
                    COLORS = COLORS[2:1],
                    ymin = 160,
-                   ymax = 190,
-                   plot_title = question_show(question = "qn_14"))
+                   ymax = 190)
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, która prowadzi zajęcia zdalne %i dodatkowo pomaga prowadzić zajęcia zdalne, spośród tych którzy nie prowadzą zajęć zdalnych pomaga %i.",
   compute_number(question = qn_14, response = "Tak"),
@@ -467,22 +831,78 @@ cap <- sprintf(
   compute_number(question = qn_14, response = "Nie", conditional = TRUE, question2 = qn_15, response2 = "Tak"))
 ```
 
+**`r question_show(question = "qn_14")`**
+
 ```{r zajecia-zdalne-kurs,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_14,
                    conditional = TRUE,
                    question2 = qn_20,
-                   legend_title = "Czy jesteś zainteresowana /  zainteresowany udziałem w kursie online, doskonalącym umiejętności nauczania zdalnego?",
+                   legend_title = question_show(question = "qn_20"),
                    COLORS = COLORS[2:1],
                    ymin = 160,
-                   ymax = 190,
-                   plot_title = question_show(question = "qn_14"))
+                   ymax = 190)
 cap <- sprintf("Z %i doktorantek i doktorantów, która prowadzi zajęcia zdalne %i jest zainteresowanych uczestnictwem w kursie doskonalącym umiejętności nauczania zdalnego, spośród tych którzy nie prowadzą zajęć zdalnych zainteresowanych jest %i.",
                compute_number(question = qn_14, response = "Tak"),
                compute_number(question = qn_14, response = "Tak", conditional = TRUE, question2 = qn_20, response2 = "Tak"),
                compute_number(question = qn_14, response = "Nie", conditional = TRUE, question2 = qn_20, response2 = "Tak"))
 ```
 
-# Zajęcia
+## Tabele
+
+```{r zajecia-zdalne-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów prowadzących zajęcia zdecydowana większość (%i) prowadzi zajęcia zdalnie. Jednak warto zwrócić uwagę na to, że aż %i z doktorantek i doktorantów  z %i doktorantek i doktorantów nieprowadzących zajęć nie ma warunków do prowadzenia zajęć zdalnych.",
+  compute_number(question = qn_14, response = "Tak") + compute_number(question = qn_14, response = "Nie"),
+  compute_number(question = qn_14, response = "Tak"),
+  compute_number(question = qn_14, response = "Nie", conditional = TRUE, question2 = qn_17, response2 = "Tak"),
+  compute_number(question = qn_14, response = "Nie"))
+
+make_table(question = qn_14,
+           conditional = TRUE,
+           question2 = qn_17,
+           cap = cap)
+```
+
+```{r zajecia-zdalne-pomoc-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, która prowadzi zajęcia zdalne %i dodatkowo pomaga prowadzić zajęcia zdalne, spośród tych którzy nie prowadzą zajęć zdalnych pomaga %i.",
+  compute_number(question = qn_14, response = "Tak"),
+  compute_number(question = qn_14, response = "Tak", conditional = TRUE, question2 = qn_15, response2 = "Tak"),
+  compute_number(question = qn_14, response = "Nie", conditional = TRUE, question2 = qn_15, response2 = "Tak"))
+
+make_table(question = qn_14,
+           conditional = TRUE,
+           question2 = qn_15,
+           cap = cap)
+```
+
+```{r zajecia-zdalne-kurs-table,  layout="l-body-outset"}
+cap <- sprintf("Z %i doktorantek i doktorantów, która prowadzi zajęcia zdalne %i jest zainteresowanych uczestnictwem w kursie doskonalącym umiejętności nauczania zdalnego, spośród tych którzy nie prowadzą zajęć zdalnych zainteresowanych jest %i.",
+               compute_number(question = qn_14, response = "Tak"),
+               compute_number(question = qn_14, response = "Tak", conditional = TRUE, question2 = qn_20, response2 = "Tak"),
+               compute_number(question = qn_14, response = "Nie", conditional = TRUE, question2 = qn_20, response2 = "Tak"))
+
+make_table(question = qn_14,
+           conditional = TRUE,
+           question2 = qn_20,
+           cap = cap)
+```
+
+## Otwarte
+
+```{r qn18-table, layout="l-body-outset"}
+make_open_table(question = qn_18)
+```
+
+```{r qn19-table, layout="l-body-outset"}
+make_open_table(question = qn_19)
+```
+
+# Zajęcia {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_22")`**
 
 ```{r uczestnictwo-zdalne,  layout="l-body-outset", fig.cap=cap}
 cap <- sprintf(
@@ -514,6 +934,8 @@ data_wide %>%
   theme(legend.position="bottom", legend.title = element_blank())
 ```
 
+**`r question_show(question = "qn_23")`**
+
 ```{r zajecia-zdalne-kurs-2,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_23,
                    conditional = TRUE,
@@ -521,17 +943,23 @@ plot_con_questions(question = qn_23,
                    legend_title = "",
                    COLORS = COLORS[2:1],
                    ymin = 160,
-                   ymax = 190,
-                   plot_title = question_show(question = "qn_23"))
+                   ymax = 190)
 cap <- sprintf("Z %i doktorantek i doktorantów, którzy uczestniczą w tym semestrze w zajęciach %i ma warunki do uczestniczenia w zajęciach zdalnych.",
                compute_number(question = qn_23, response = "Tak") + compute_number(question = qn_23, response = "Nie"),
                compute_number(question = qn_23, response = "Tak"))
 ```
 
-Na razie nie przyglądałem się pozostałym pytaniom otwartym. Chciałem wypisać tylko te pozytywne przykłady. Smutne jest tylko to, że większość doktorantów i doktorantek nie umie obsługiwać komputera albo nie rozumie pytania. Jeśli pytanie jest nieobowiązkowe to naprawdę nie trzeba w nim pisać odpowiedzi typu: ,,Nie mam zdania'' itp.
+## Otwarte
 
+```{r qn25-table, layout="l-body-outset"}
+make_open_table(question = qn_25)
+```
 
-```{r table_good_examples, fig.width=8, layout="l-body-outset"}
+```{r qn26-table, layout="l-body-outset"}
+make_open_table(question = qn_26)
+```
+
+```{r table-good-examples, layout="l-body-outset"}
 cap = question_show(question = "qn_24")
 data_wide %>%
   filter(!is.na(qn_24)) %>%
@@ -554,7 +982,9 @@ data_wide %>%
                        "Żadne (ale jedne jeszcze się nie odbyły)",
                        "Jeszcze się nie odbyły :)",
                        "Brak takich zajęć")) %>%
-  select(Jednostka =  faculty_label, Odpowiedź = qn_24) %>%
+  select("Rodzaj kształcenia" = position,
+         Jednostka =  faculty_label,
+         Odpowiedź = qn_24) %>%
   ungroup(id) %>%
   mutate(id = 1:n()) %>%
   kable(caption = cap, "html") %>%
@@ -565,7 +995,11 @@ data_wide %>%
 
 ```
 
-# Administracja
+# Administracja {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_27")`**
 
 ```{r admin-info,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_27,
@@ -573,13 +1007,14 @@ plot_con_questions(question = qn_27,
                    question2 = position,
                    COLOR = COLORS[2:1],
                    ymin = 450,
-                   ymax = 510,
-                   plot_title = question_show(question = "qn_27"))
+                   ymax = 510)
 cap <- sprintf(
   "Z %i doktorantek i doktorantów, którzy wzięli udział w ankiecie aż %i dostaje informacje na temat zmian w funkcjonowaniu Uniwersytetu Warszawskiego od swojej jednostki.",
   compute_number(question = qn_27, response = "Tak") + compute_number(question = qn_27, response = "Nie"),
   compute_number(question = qn_27, response = "Tak"))
 ```
+
+**`r question_show(question = "qn_28")`**
 
 ```{r admin-jednostka,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_28,
@@ -587,27 +1022,27 @@ plot_con_questions(question = qn_28,
                    question2 = position,
                    COLOR = COLORS[2:1],
                    ymin = 240,
-                   ymax = 270,
-                   plot_title = question_show(question = "qn_28"))
+                   ymax = 270)
 cap <- sprintf(
   "Z %i doktorantek i doktorantów tylko %i ocenia pracę administracji w swojej jednostce w sposób negatywny.",
   compute_number(question = qn_28, response = "Tak") + compute_number(question = qn_28, response = "Nie") + compute_number(question = qn_28, response = "Brak kontaktu"),
   compute_number(question = qn_28, response = "Nie"))
 ```
 
+**`r question_show(question = "qn_29")`**
+
 ```{r admin-uw,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_29,
                    conditional = TRUE,
                    question2 = position,
-                   COLOR = COLORS[2:1],
-                   plot_title = question_show(question = "qn_29"))
+                   COLOR = COLORS[2:1])
 cap <- sprintf(
   "Z %.0f doktorantek i doktorantów tylko %.0f ocenia pracę administracji uniwersyteckiej w sposób negatywny.",
   compute_number(question = qn_29, response = "Tak") + compute_number(question = qn_29, response = "Nie") + compute_number(question = qn_29, response = "Brak kontaktu"),
   compute_number(question = qn_29, response = "Nie"))
 ```
 
-To jest chyba najsmutniejszy wykres świata. Strona samorządu przegrywa z Monitorem UW. Ja to myślałem, że tylko pasjonaci zaglądają na stronę Monitora, a tu widać jestem jeszcze większym pasjonatem bo zaglądam na stronę Samorządu. Za to jeśli chodzi o Facebooka to idziemy łeb w łeb z UW.
+**`r question_show(question = "qn_31")`**
 
 ```{r sources,  layout="l-body-outset", fig.cap=cap}
 data_temp <- data_wide %>%
@@ -633,7 +1068,7 @@ data_temp %>%
   ggplot(aes(x = label, fill = position)) +
   geom_bar() +
   theme_classic() +
-  labs(title = question_show(question = "qn_31"), x = "", y = "Liczebność")+ 
+  labs(title = "", x = "", y = "Liczebność")+ 
   #annotation_custom(l, xmin = -1, xmax = 4, ymin = 45, ymax = 60) + 
   #coord_cartesian(clip = "off") +
   coord_flip() +
@@ -642,63 +1077,239 @@ data_temp %>%
   theme(legend.position="bottom", legend.title = element_blank())
 ```
 
+**`r question_show(question = "qn_30")`**
+
 ```{r admin-spotkanie,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_30,
                    conditional = TRUE,
                    question2 = position,
                    COLOR = COLORS[2:1],
                    ymin = 450,
-                   ymax = 510,
-                   plot_title = question_show(question = "qn_30"))
+                   ymax = 510)
 cap <- sprintf(
-  "Odpowiedź na to pytanie to jest moim zdaniem porażka Władz Rektorskich. Z jednej strony tę ankietę wypełniło %i osób z drugiej strony w spotkaniu z Panią Rektor wzięło udział tylko %i z nich. Następnym razem takie informacje muszą iść przez Listę Mailingową.",
-  compute_number(question = qn_30, response = "Tak") + compute_number(question = qn_30, response = "Nie"),
-  compute_number(question = qn_30, response = "Tak"))
+  "W spotkaniu z Panią Rektor prof. dr hab. Jolantą Choińską - Miką wzięło udział jedynie %i z %i osób, które wypełniły ankietę.",
+  compute_number(question = qn_30, response = "Tak"),
+  compute_number(question = qn_30, response = "Tak") + compute_number(question = qn_30, response = "Nie"))
 ```
 
+## Tabele
 
-# Sytuacja Socjalna
+```{r admin-info-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów, którzy wzięli udział w ankiecie aż %i dostaje informacje na temat zmian w funkcjonowaniu Uniwersytetu Warszawskiego od swojej jednostki.",
+  compute_number(question = qn_27, response = "Tak") + compute_number(question = qn_27, response = "Nie"),
+  compute_number(question = qn_27, response = "Tak"))
+
+
+data_wide %>%
+  filter(!is.na(qn_27)) %>%
+  filter(scale != "") %>%
+  group_by(qn_27, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Rodzaj kształcenia" = position,
+         !!question_show(question = "qn_27") := qn_27) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+
+```{r admin-jednostka-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %i doktorantek i doktorantów tylko %i ocenia pracę administracji w swojej jednostce w sposób negatywny.",
+  compute_number(question = qn_28, response = "Tak") + compute_number(question = qn_28, response = "Nie") + compute_number(question = qn_28, response = "Brak kontaktu"),
+  compute_number(question = qn_28, response = "Nie"))
+
+data_wide %>%
+  filter(!is.na(qn_28)) %>%
+  filter(scale != "") %>%
+  group_by(qn_28, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Rodzaj kształcenia" = position,
+         !!question_show(question = "qn_28") := qn_28) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+
+**`r question_show(question = "qn_29")`**
+
+```{r admin-uw-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Z %.0f doktorantek i doktorantów tylko %.0f ocenia pracę administracji uniwersyteckiej w sposób negatywny.",
+  compute_number(question = qn_29, response = "Tak") + compute_number(question = qn_29, response = "Nie") + compute_number(question = qn_29, response = "Brak kontaktu"),
+  compute_number(question = qn_29, response = "Nie"))
+
+data_wide %>%
+  filter(!is.na(qn_29)) %>%
+  filter(scale != "") %>%
+  group_by(qn_29, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Rodzaj kształcenia" = position,
+         !!question_show(question = "qn_29") := qn_29) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+
+```{r sources-table,  layout="l-body-outset"}
+data_temp <- data_wide %>%
+  mutate(qn_31 = str_split(qn_31, pattern = ",")) %>% 
+  unnest(qn_31) %>%
+  mutate(qn_31 = trimws(qn_31)) %>% 
+  ungroup(id) %>%
+  left_join(source_map)
+
+cap <- sprintf("Najczęstszym deklarowanym źródłem informacji jest jednostka, aż %i doktorantów i doktorantek dostaje informacje z tego źródła. Potem jest Lista Mailingowa itd. Najsmutniejsze jest to, że Strona Samorządu UW przegrywa %i do %i z Monitorem UW.", compute_number(table = data_temp, question = source_label, response = "Z jednostki"), compute_number(table = data_temp, question = source_label, response = "Ze strony SD UW"), compute_number(table = data_temp, question = source_label, response = "Z Monitora UW"))
+
+order_sources <- data_temp %>%
+  filter(!is.na(source_label)) %>%
+  group_by(source_label) %>%
+  summarise(count = n()) %>%
+  arrange(count) %$%
+  source_label
+
+data_temp %>%
+  filter(!is.na(source_label)) %>%
+  mutate(label = factor(source_label, levels = order_sources),
+         position = factor(position, levels = c("Szkoła Doktorska", "Studia Doktoranckie" ))) %>%
+  filter(!is.na(label)) %>%
+  filter(scale != "") %>%
+  group_by(label, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Rodzaj kształcenia" = position,
+         !! question_show(question = "qn_31") := label) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+
+```{r admin-spotkanie-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "W spotkaniu z Panią Rektor prof. dr hab. Jolantą Choińską - Miką wzięło udział jedynie %i z %i osób, które wypełniły ankietę.",
+  compute_number(question = qn_30, response = "Tak"),
+  compute_number(question = qn_30, response = "Tak") + compute_number(question = qn_30, response = "Nie"))
+
+data_wide %>%
+  filter(!is.na(qn_30)) %>%
+  filter(scale != "") %>%
+  group_by(qn_30, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Rodzaj kształcenia" = position,
+         !!question_show(question = "qn_30") := qn_30) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+```
+
+## Otwarte 
+
+```{r qn32-table, layout="l-body-outset"}
+make_open_table(question = qn_32)
+```
+
+```{r qn33-table, layout="l-body-outset"}
+make_open_table(question = qn_33)
+```
+
+# Sytuacja Socjalna {.tabset}
+
+## Wykresy
+
+**`r question_show(question = "qn_34")`**
 
 ```{r social-dochod,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_34,
                    conditional = TRUE,
                    question2 = qn_36,
-                   legend_title = "Czy obawiasz się, że będziesz musiała / musiał zrezygnować z doktoratu z powodu nowej sytuacji finansowej?",
-                   COLOR = COLORS[2:1],
-                   plot_title = question_show(question = "qn_34"))
+                   legend_title = question_show(question = "qn_36"),
+                   COLOR = COLORS[2:1])
 cap <- sprintf("Z %i doktorantek i doktorantów aż %i utraciło źródło dochodu w związku z wprowadzonymi przez Rząd restrykcjami. Jednocześnie aż %i doktorantów i doktorantek obawia się, że będzie musiała zrezygnować z pisania doktoratu z powodu trudnej sytuacji finansowej, nie ma tutaj znaczenia czy utracili dochód czy nie.",
                compute_number(question = qn_34, response = "Tak") + compute_number(question = qn_34, response = "Nie"),
                compute_number(question = qn_34, response = "Tak"),
                compute_number(question = qn_36, response = "Tak"))
 ```
 
+**`r question_show(question = "qn_34")`**
+
 ```{r social-zapomoga,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_34,
                    conditional = TRUE,
                    question2 = qn_35,
-                   legend_title = "Czy wiesz jak uzyskać zapomogę?",
-                   COLOR = COLORS[2:1],
-                   plot_title = question_show(question = "qn_34"))
+                   legend_title = question_show(question = "qn_35"),
+                   COLOR = COLORS[2:1])
 cap <- sprintf("Z %i doktorantek i doktorantów aż %i utraciło źródło dochodu w związku z wprowadzonymi przez Rząd restrykcjami. Jednocześnie mniej niż połowa (%i) z nich wie jak uzyskać zapomogę.",
                compute_number(question = qn_34, response = "Tak") + compute_number(question = qn_34, response = "Nie"),
                compute_number(question = qn_34, response = "Tak"),
                compute_number(question = qn_34, response = "Tak", conditional = TRUE, question2 = qn_35, response2 = "Tak"))
 ```
 
+**`r question_show(question = "qn_36")`**
+
 ```{r social-doktorat,  layout="l-body-outset", fig.cap=cap}
 plot_con_questions(question = qn_36,
                    conditional = TRUE,
                    question2 = qn_35,
-                   legend_title = "Czy wiesz jak uzyskać zapomogę?",
-                   COLOR = COLORS[2:1],
-                   plot_title = question_show(question = "qn_36"))
-cap <- sprintf("Z %i doktorantek i doktorantów aż %i obawia się, że będzie musiała zrezygnować z doktoratu z powodu trudnej sytucaji finansowej. Jednocześnie tylko %i z nich wie jak uzyskać zapomogę.",
+                   legend_title = question_show(question = "qn_35"),
+                   COLOR = COLORS[2:1])
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i obawia się, że będzie musiała zrezygnować z doktoratu z powodu trudnej sytuacji finansowej. Jednocześnie tylko %i z nich wie jak uzyskać zapomogę.",
                compute_number(question = qn_36, response = "Tak") + compute_number(question = qn_36, response = "Nie"),
                compute_number(question = qn_36, response = "Tak"),
                compute_number(question = qn_36, response = "Tak", conditional = TRUE, question2 = qn_35, response2 = "Tak"))
 ```
 
-# Promotorzy
+## Tabele
+
+```{r social-dochod-table,  layout="l-body-outset"}
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i utraciło źródło dochodu w związku z wprowadzonymi przez Rząd restrykcjami. Jednocześnie aż %i doktorantów i doktorantek obawia się, że będzie musiała zrezygnować z pisania doktoratu z powodu trudnej sytuacji finansowej, nie ma tutaj znaczenia czy utracili dochód czy nie.",
+               compute_number(question = qn_34, response = "Tak") + compute_number(question = qn_34, response = "Nie"),
+               compute_number(question = qn_34, response = "Tak"),
+               compute_number(question = qn_36, response = "Tak"))
+
+make_table(question = qn_34,
+           conditional = TRUE,
+           question2 = qn_36,
+           cap = cap)
+```
+
+```{r social-zapomoga-table,  layout="l-body-outset"}
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i utraciło źródło dochodu w związku z wprowadzonymi przez Rząd restrykcjami. Jednocześnie mniej niż połowa (%i) z nich wie jak uzyskać zapomogę.",
+               compute_number(question = qn_34, response = "Tak") + compute_number(question = qn_34, response = "Nie"),
+               compute_number(question = qn_34, response = "Tak"),
+               compute_number(question = qn_34, response = "Tak", conditional = TRUE, question2 = qn_35, response2 = "Tak"))
+
+make_table(question = qn_34,
+           conditional = TRUE,
+           question2 = qn_36,
+           cap = cap)
+```
+
+```{r social-doktorat-table,  layout="l-body-outset"}
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i obawia się, że będzie musiała zrezygnować z doktoratu z powodu trudnej sytuacji finansowej. Jednocześnie tylko %i z nich wie jak uzyskać zapomogę.",
+               compute_number(question = qn_36, response = "Tak") + compute_number(question = qn_36, response = "Nie"),
+               compute_number(question = qn_36, response = "Tak"),
+               compute_number(question = qn_36, response = "Tak", conditional = TRUE, question2 = qn_35, response2 = "Tak"))
+
+make_table(question = qn_34,
+           conditional = TRUE,
+           question2 = qn_35,
+           cap = cap)
+```
+
+# Promotorzy {.tabset}
+
+## Wykresy
+
+**Na ile zmienił się Twój kontakt z Promotorką / Promotorem (Opiekunem / Opiekunką naukową) podczas pandemii?**
 
 ```{r promo,  layout="l-body-outset", fig.cap=cap}
 cap <- sprintf(
@@ -712,16 +1323,16 @@ plot_con_questions(question = scale,
                    legend_title = "",
                    COLOR = COLORS[2:1],
                    ymin = 300,
-                   ymax = 330,
-                   plot_title = "Na ile zmienił się Twój kontakt z Promotorką / Promotorem (Opiekunem / Opiekunką naukową) podczas pandemii?")
+                   ymax = 330)
 ```
 
+**Kiedy ostatnio rozmawiałaś / rozmawiałeś (przez telefon lub wykorzystując dostępne narzędzia informatyczne) ze swoją Promotorką / Promotorem (Opiekunem / Opiekunką naukową)?**
 
 ```{r promo-call,  layout="l-body-outset", fig.cap=cap}
 cap <- sprintf("Większość (%i) doktorantek i doktorantów rozmawiała ze swoją Promotorką / Promotorem (Opiekunką / Opiekunem naukowym) w ciągu ostatnich dwóch tygodni. Jednakże jest też spora grupa %i doktorantek i doktorantów, która od ponad dwóch tygodni nie miała kontaktu ze swoją Promotorką / Promotorem (Opiekunką / Opiekunem naukowym). Co mało zaskakujące spora ich część uważa, że ich kontakt się pogorszył (%i)",
-               compute_number(question = contact_label, response = "W ciągu ostatnich 2 tygodnii"),
-               compute_number(question = contact_label, response = "Nie rozmawialiśmy / rozmawiałyśmy \nod 2 tygodni"),
-               compute_number(question = contact_label, response = "Nie rozmawialiśmy / rozmawiałyśmy \nod 2 tygodni", conditional = TRUE, question2 = scale, response2 = "Jest gorzej"))
+               compute_number(question = contact_label, response = "W ciągu ostatnich\n 2 tygodnii"),
+               compute_number(question = contact_label, response = "Nie rozmawialiśmy /\nrozmawiałyśmy \nod 2 tygodni"),
+               compute_number(question = contact_label, response = "Nie rozmawialiśmy /\nrozmawiałyśmy \nod 2 tygodni", conditional = TRUE, question2 = scale, response2 = "Jest gorzej"))
 
 plot_con_questions(question = contact_label,
                    conditional = TRUE,
@@ -730,13 +1341,55 @@ plot_con_questions(question = contact_label,
                    reorder = TRUE,
                    COLOR = COLORS[2:1],
                    ymin = 150,
-                   ymax = 180,
-                   plot_title = "Kiedy ostatnio rozmawiałaś / rozmawiałeś ze swoją Promotorką / Promotorem (Opikunem / Opiekunką naukową) przez telefon lub przy użyciu dostępnych narzędzi informatycznych?")
+                   ymax = 180)
 ```
 
-# Dodatkowe pytanie
+## Tabele
 
-Przefiltrowałem odpowiedzi, żeby usunąć pojedyncze bluzgi i odpowiedzi typu, że nie ma się nic do powiedzenia. Moim zdaniem warto przejrzeć, bo nie jest ich jakoś szczególnie dużo. Jest parę odpowiedzi, które zwróciły moją uwagę. Między innymi te które mówią o kondycji psychicznej doktorantów wprost (16, 27, 33, 73, 75, 94, 119), i te które robią to nie wprost pisząc o ogólnym niepokoju i niepewności związanej z przyszłością (1, 3, 4, 9, 11, 12, 20, 22, 23, 25, 30, 34, 37, 38, 39, 40, 41, 44, 47, 55, 57, 62, 71, 75, 77, 81, 85, 88, 90, 91, 92, 97, 108, 109, 110, 114, 120, 124). Choć te drugie głównie dotyczą albo braku informacji albo niepewności finansowej związanej ze stypendium. Poza tym jest jedna odpowiedź w której ktoś pozdrawia Panią Rektor (49) i jedna specjalnie dla Natalii i Kasi specjalnie (72). Powtarzającym się motywem są też problemy z dziećmi, ale tych już nie wypisywałem.
+```{r promo-table,  layout="l-body-outset"}
+cap <- sprintf(
+  "Dla przeważającej większości (%i) doktorantek i doktorantów kontakt z Promotorką / Promotorem (Opiekunem / Opiekunką naukową) mimo szeregu ograniczeń w funkcjonowaniu Uniwersytetu Warszawskiego pozostał bez zmian lub się polepszył. Jednak dla aż %i obecna sytuacja wpłynęła na pogorszenie się tego kontaktu.",
+  compute_number(question = qn_37, response = 3) + compute_number(question = qn_37, response = 5) + compute_number(question = qn_37, response = 4),
+  compute_number(question = qn_37, response = 1) + compute_number(question = qn_37, response = 2))
+
+data_wide %>%
+  filter(!is.na(scale)) %>%
+  filter(scale != "") %>%
+  group_by(scale, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Rodzaj kształcenia" = position,
+         "Na ile zmienił się Twój kontakt z Promotorką / Promotorem (Opiekunem / Opiekunką naukową) podczas pandemii?" = scale) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+
+```
+
+```{r promo-call-table,  layout="l-body-outset", fig.cap=cap}
+cap <- sprintf("Większość (%i) doktorantek i doktorantów rozmawiała ze swoją Promotorką / Promotorem (Opiekunką / Opiekunem naukowym) w ciągu ostatnich dwóch tygodni. Jednakże jest też spora grupa %i doktorantek i doktorantów, która od ponad dwóch tygodni nie miała kontaktu ze swoją Promotorką / Promotorem (Opiekunką / Opiekunem naukowym). Co mało zaskakujące spora ich część uważa, że ich kontakt się pogorszył (%i)",
+               compute_number(question = contact_label, response = "W ciągu ostatnich\n 2 tygodnii"),
+               compute_number(question = contact_label, response = "Nie rozmawialiśmy /\nrozmawiałyśmy \nod 2 tygodni"),
+               compute_number(question = contact_label, response = "Nie rozmawialiśmy /\nrozmawiałyśmy \nod 2 tygodni", conditional = TRUE, question2 = scale, response2 = "Jest gorzej"))
+
+data_wide %>%
+  filter(!is.na(contact_label)) %>%
+  filter(scale != "") %>%
+  group_by(contact_label, position) %>%
+  summarise(Liczebność = n()) %>%
+  arrange(desc(Liczebność)) %>%
+  rename("Rodzaj kształcenia" = position,
+         "Kiedy ostatnio rozmawiałaś / rozmawiałeś (przez telefon lub wykorzystując dostępne narzędzia informatyczne) ze swoją Promotorką / Promotorem (Opiekunem / Opiekunką naukową)?" = contact_label) %>%
+   kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+
+```
+
+
+# Dodatkowe pytanie
 
 ```{r table, fig.width=8, layout="l-body-outset"}
 cap = question_show(question = "qn_46")
@@ -748,7 +1401,7 @@ data_wide %>%
                        "Nie mam pomysłów",
                        "Nie dotyczy",
                        "Nie powinno być tak, że aby wypełnić ankietę obligatoryjne jest polecenie serialu.....")) %>%
-  select(Jednostka =  faculty_label, Odpowiedź = qn_46) %>%
+  select(Jednostka =  faculty_label, "Rodzaj kształcenia" = position, Odpowiedź = qn_46) %>%
   ungroup(id) %>%
   mutate(id = 1:n()) %>%
   kable(caption = cap, "html") %>%

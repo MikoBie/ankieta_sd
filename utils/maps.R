@@ -44,7 +44,8 @@ FACULTIES_MAP <- list(
       "Wydział Chemii",
       "Faculty of Chemistry",
       "WCh",
-      "Wydział Chemii, Pracownia Fizykochemii Dielektryków i Magnetyków"),
+      "Wydział Chemii, Pracownia Fizykochemii Dielektryków i Magnetyków",
+      "Uniwersytet Warszawski Wydział Chemii"),
     "Nauki Ścisłe i Przyrodnicze",
     "WCh UW"),
   'Wydział Dziennikarstwa, Informacji i Bibliologii' = list(
@@ -60,7 +61,8 @@ FACULTIES_MAP <- list(
       "Instytut Filozofii",
       "Wydział Filozofii i Socjologii",
       "Szkoła Doktorska Nauk Humanistycznych /Filozofia",
-      "Szkoła Doktorska Nauk Humanistycznych, dyscyplina Filozofia"),
+      "Szkoła Doktorska Nauk Humanistycznych, dyscyplina Filozofia",
+      "Wydział Filozofii i Socjologii, Instytut Filozofii"),
     "Nauki Humanistyczne",
     "WFiS UW"),
   'Instytut Socjologii' = list(
@@ -91,6 +93,7 @@ FACULTIES_MAP <- list(
       "Wydział Fizyki",
       "Faculty of Physics",
       "Faculty of Physics, CeNT",
+      "Wydział Fizyki, Instytut Fizyki doświadczalnej, Zakład Biofizyki",
       "FUW"),
     "Nauki Ścisłe i Przyrodnicze",
     "FUW"),
@@ -158,7 +161,8 @@ FACULTIES_MAP <- list(
       "WNE UW",
       "Faculty of Economic Sciences",
       "Khdir Sarhad, Faculty of Economic Sciences",
-      "Social Sciences, Faculty of Economics"),
+      "Social Sciences, Faculty of Economics",
+      "Wydział  Nauk Ekonomicznych"),
     "Nauki Społeczne",
     "WNE UW"),
   'Wydział Nauk Politycznych i Studiów Międzynarodowych' = list(
@@ -203,7 +207,9 @@ FACULTIES_MAP <- list(
       "Wydział Orientalistyki UW",
       "Wydział Orientalistyczny",
       "Zakład Hebraistyki",
-      "Zakład Turkologii i Ludów Azji Środkowej WO UW"),
+      "Zakład Turkologii i Ludów Azji Środkowej WO UW",
+      "Oriental Studies",
+      "Faculty of Oriental Studies"),
     "Nauki Humanistyczne",
     "WO UW"),
   'Wydział Pedagogiczny' = list(
@@ -237,7 +243,8 @@ FACULTIES_MAP <- list(
       "Instytut Kultury Polskiej",
       "Instytut Kultury Polskiej UW",
       "Instytut literatury polskiej",
-      "Wydział Polonistyki"),
+      "Wydział Polonistyki",
+      "Instytut Literatury Polskiej, Wydział Polonistyki"),
     "Nauki Humanistyczne",
     "WPol UW"),
   'Wydział Prawa i Administracji' = list(

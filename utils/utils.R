@@ -39,12 +39,7 @@ get_png <- function(filename) {
   grid::rasterGrob(png::readPNG(filename), interpolate = TRUE)
 }
 
-question_show <- function(table = QUESTION_LOOKUP, question = "qn_1", lang = "polski"){
-  table %>%
-    filter(qn == question) %>%
-    select(all_of(lang)) %>%
-    as.character()
-}
+
 
 compute_number <- function(table = data_wide,
                            question = qn_3,
@@ -85,7 +80,7 @@ plot_con_questions <- function(table = data_wide,
                                legend = TRUE,
                                COLORS = COLORS[1:2]){
   plot_title <- str_wrap(plot_title)
-  legend_title <- str_wrap(legend_title,40)
+  legend_title <- str_wrap(legend_title,60)
   question <- enquo(question)
   question2 <- enquo(question2)
   table <- table %>%
@@ -134,5 +129,89 @@ plot_con_questions <- function(table = data_wide,
   print(plot_con)
 }
 
-
+make_table <- function(table = data_wide,
+                       question = qn_3,
+                       conditional = FALSE,
+                       question2 = qn_3,
+                       cap = ""){
   
+  
+  
+  question <- enquo(question)
+  question2 <- enquo(question2)
+  question_label <- question_show(question = question)
+  question_label2 <- question_show(question = question2)
+  
+  
+  if(conditional){
+    temp <- table %>%
+      filter(!is.na(!! question)) %>%
+      filter(!! question2 != "") %>%
+      mutate(label = !! question,
+             label2 = !! question2) %>%
+      group_by(label, label2) %>%
+      summarise(Frequency = n()) %>% 
+      select(!! question_label := label,
+             !! question_label2 := label2,
+             Liczebność = Frequency) %>%
+      kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+  } else {
+    temp <- table %>%
+      filter(!is.na(!! question)) %>%
+      filter(!! question2 != "") %>%
+      mutate(label = !! question) %>%
+      group_by(label) %>%
+      summarise(Frequency = n()) %>% 
+      select(!! question_label2 := label,
+             Liczebność  = Frequency) %>%
+      kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE)
+  }
+  return(temp)
+}
+
+question_show <- function(table = QUESTION_LOOKUP, question = qn_1, lang = "polski"){
+  table  %>%
+    pivot_longer(cols = polski:english,
+                 values_to = "value",
+                 names_to = "language") %>%
+    pivot_wider(names_from = qn,
+                values_from = value) %>%
+    filter(language == lang) %>%
+    select(!! question) %>%
+    pull()
+}
+
+make_open_table <- function(table = data_wide,
+                            question = qn_4,
+                            defualt_cap = TRUE,
+                            custom_cap = "",
+                            stupid_answers = ""
+                            ){
+  question <- enquo(question)
+  if (defualt_cap){
+    cap <- question_show(question = question) %>%
+      str_remove(pattern = "_\\d")
+      
+  } else {
+    cap <- custom_cap
+  }
+  
+  table %>%
+    filter(!is.na(!! question)) %>%
+    filter(nchar(!! question) > 10) %>%
+    filter(!(!! question) %in% stupid_answers) %>%
+    select(Jednostka =  faculty_label, "Rodzaj kształcenia" = position, Odpowiedź = !! question) %>%
+    ungroup(id) %>%
+    mutate(id = 1:n()) %>%
+    kable(caption = cap, "html") %>%
+    kable_styling(bootstrap_options = c("striped","hover"),
+                  font_size = 10,
+                  full_width = TRUE) %>%
+    scroll_box(width = "100%", height = "600px")
+}
