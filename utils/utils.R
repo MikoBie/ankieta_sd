@@ -206,12 +206,14 @@ make_open_table <- function(table = data_wide,
     filter(!is.na(!! question)) %>%
     filter(nchar(!! question) > 10) %>%
     filter(!(!! question) %in% stupid_answers) %>%
-    select(Jednostka =  faculty_label, "Rodzaj kształcenia" = position, Odpowiedź = !! question) %>%
+    select(Jednostka =  faculty_label, position, Odpowiedź = !! question) %>%
     ungroup(id) %>%
-    mutate(id = 1:n()) %>%
-    kable(caption = cap, "html") %>%
-    kable_styling(bootstrap_options = c("striped","hover"),
-                  font_size = 10,
-                  full_width = TRUE) %>%
-    scroll_box(width = "100%", height = "600px")
+    mutate(id = 1:n(),
+           Jednostka = as.factor(Jednostka),
+           position = as.factor(position)) %>%
+    rename("Rodzaj kształcenia" = position) %>%
+    DT::datatable(caption = cap,
+                  rownames = FALSE,
+                  filter = "top",
+                  options = list(sDom  = '<"top">lrt<"bottom">ip'))
 }
