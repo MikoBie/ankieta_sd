@@ -42,14 +42,14 @@ COLORS <- c("#123e65",
 
 
 ```{r get_data}
-data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ 1-2.csv")
+data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ last.csv")
 
 QUESTION_LOOKUP <- tibble(polski = colnames(data)[51:98],
                           english = colnames(data)[3:50]) %>%
   mutate(qn = paste0("qn_", 1:n())) %>%
   select(qn, polski, english) 
 
-data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ 1-2.csv") %>%
+data <- read_csv("data/Ankieta dla doktorantów (Odpowiedzi) - Liczba odpowiedzi_ last.csv") %>%
   rename(time = "Sygnatura czasowa",
          language = "Please select the language (choose wisely)") %>%
   mutate(id = 1:n()) %>%
@@ -183,7 +183,7 @@ data_wide %>%
   scale_fill_manual(values=COLORS[1:2], limits = c("Studia Doktoranckie", "Szkoła Doktorska")) +
   theme(legend.position="bottom", legend.title = element_blank())
 cap <- sprintf(
-  "Z %i doktorantek i doktorantów, którzy wzięli udział w badaniu najwięcej reprezentowało %s - %i; %s reprezentowało %i, a %s - %i (dla 9 doktorantek i doktorantów nie udało się ustalić dziedziny nauki).",
+  "Z %i doktorantek i doktorantów, którzy wzięli udział w badaniu najwięcej reprezentowało %s - %i; %s reprezentowało %i, a %s - %i (dla 10 doktorantek i doktorantów nie udało się ustalić dziedziny nauki).",
   data_wide %>% nrow,
   data_wide %>% group_by(science_label) %>% summarise(count = n()) %>% arrange(desc(count)) %>% slice(1) %>% pull(science_label),
   data_wide %>% group_by(science_label) %>% summarise(count = n()) %>% arrange(desc(count)) %>% slice(1) %>% pull(count),
@@ -640,7 +640,7 @@ plot_con_questions(question = qn_11,
                    ymax = 54,
                    ymin = 47)
 cap <- sprintf(
-  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, ponad połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Najwięcej takich doktorantek i doktorantów reprezentuje Nauki Humanistyczne - %i, Nauki Ścisłe i Przyrodnicze - %i, a Nauki Społeczne - %i (u jednej osoby ciężko było zidentyfikować dziedzinę nauki).",
+  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Najwięcej takich doktorantek i doktorantów reprezentuje Nauki Humanistyczne - %i, Nauki Ścisłe i Przyrodnicze - %i, a Nauki Społeczne - %i (u jednej osoby ciężko było zidentyfikować dziedzinę nauki).",
   compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
   compute_number(question = qn_11, response = "Tak"),
   compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = science_label, response2 = "Nauki Humanistyczne"),
@@ -689,7 +689,7 @@ cap <- sprintf(
 
 ```{r obrona-plan-4,  layout="l-body-outset", fig.cap=cap}
 cap <- sprintf(
-  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, ponad połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Prawie połowa (%i) doktorantek i doktorantów, którzy będą mieć ten problem, jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia w szkole doktorskiej.",
+  "Z %i doktorantek i doktorantów kształcących się w szkołach doktorskich, połowa (%i) spodziewa się, że w związku z ogłoszoną decyzją o wprowadzeniu zdalnego nauczania na Uniwersytecie Warszawskim do 15 maja 2020 oraz szeregiem ograniczeń w tym semestrze, będzie miała problem z przygotowaniem Indywidualnego Planu Badawczego. Prawie połowa (%i) doktorantek i doktorantów, którzy będą mieć ten problem, jednocześnie obawia się, że będzie mieć problem z terminową realizacją kształcenia w szkole doktorskiej.",
   compute_number(question = qn_11, response = "Tak") + compute_number(question = qn_11, response = "Nie"),
   compute_number(question = qn_11, response = "Tak"),
   compute_number(question = qn_11, response = "Tak", conditional = TRUE, question2 = qn_44, response2 = "Tak"))
@@ -1427,7 +1427,7 @@ data_wide %>%
 ```{r series, fig.height=6, layout="l-body-outset"}
 # temp_series <- data %>%
 #   ungroup() %>%
-#   filter(id %in% c(526:600)) %>%
+#   filter(id %in% c(550:600)) %>%
 #   recoder(table = .) %>%
 #   tibble(series = .) %>%
 #   bind_rows(read_csv2("data/data_series.csv"))
@@ -1435,7 +1435,9 @@ data_wide %>%
 # temp_series %>%
 #   write_csv2("data/data_series.csv")
 
-data_series <- read_csv2("data/data_series.csv")
+data_series <- read_csv2("data/data_series.csv") %>%
+  mutate(series = str_split(series, pattern = ";")) %>%
+  unnest(series)
 
 SERIES_MAP = list(
   "La casa del papel" = c("Dom z papieru", "Dom z Papieru"),

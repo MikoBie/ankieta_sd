@@ -173,7 +173,8 @@ FACULTIES_MAP <- list(
       "Faculty of Political Science and International Studies",
       "Wnpism",
       "WNPiSM",
-      "WNiSM"),
+      "WNiSM",
+      "Wydział Nauk Politycznych i Stosunków Międzynarodowych"),
     "Nauki Społeczne",
     "WNPiSM UW"),
   'Wydział Neofilologii' = list(
@@ -209,7 +210,9 @@ FACULTIES_MAP <- list(
       "Zakład Hebraistyki",
       "Zakład Turkologii i Ludów Azji Środkowej WO UW",
       "Oriental Studies",
-      "Faculty of Oriental Studies"),
+      "Faculty of Oriental Studies",
+      "Wydział Orientalistyki",
+      "Katedra Języków i Kultur Afryki, Wydział Orientalsityczny"),
     "Nauki Humanistyczne",
     "WO UW"),
   'Wydział Pedagogiczny' = list(
@@ -256,7 +259,8 @@ FACULTIES_MAP <- list(
       "Wydział Prawa i Administracji",
       "WPiA",
       "WPiA UW",
-      "WPIA"),
+      "WPIA",
+      "Wpia"),
     "Nauki Społeczne",
     "WPiA UW"),
   'Wydział Psychologii' = list(
@@ -269,6 +273,7 @@ FACULTIES_MAP <- list(
       "Quantitative Psychology and Economics",
       "Wydział Psychologii, Uniwersytet Warszawski",
       "Wydział Psychologii",
+      "Faculty of Psychology",
       "wp"),
     "Nauki Społeczne",
     "WPsych UW"),
@@ -332,7 +337,8 @@ FACULTIES_MAP <- list(
       "Doctoral School of Exact and Natural Science",
       "Doctoral School of Exact and Natural Sciences",
       "SDNSiP",
-      "Szkoła Doktorska Nauk Ścisłych i Przyrodniczych"),
+      "Szkoła Doktorska Nauk Ścisłych i Przyrodniczych",
+      "Doctoral School of Natural and Exact Sciences"),
     "Nauki Ścisłe i Przyrodnicze",
     "SDNŚiP UW"),
   "Międzydziedzinowa Szkoła Doktorska" = list(
