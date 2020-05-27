@@ -56,7 +56,7 @@ FACULTIES_MAP <- list(
       "Wydział Dziennikarstwa, Informacji i Bibliologii"),
     "Nauki Humanistyczne",
     "WDIiB UW"),
-  'Wydział Filozofii i Socjologii' = list(
+  'Instytut Filozofii' = list(
     c(
       "Instytut Filozofii",
       "Wydział Filozofii i Socjologii",
@@ -64,7 +64,7 @@ FACULTIES_MAP <- list(
       "Szkoła Doktorska Nauk Humanistycznych, dyscyplina Filozofia",
       "Wydział Filozofii i Socjologii, Instytut Filozofii"),
     "Nauki Humanistyczne",
-    "WFiS UW"),
+    "IF UW"),
   'Instytut Socjologii' = list(
     c(
       "Instytut Socjologii (Wydział Filozofii  Socjologii UW)",

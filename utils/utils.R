@@ -175,7 +175,7 @@ make_table <- function(table = data_wide,
   return(temp)
 }
 
-question_show <- function(table = QUESTION_LOOKUP, question = qn_1, lang = "polski"){
+question_show <- function(table = QUESTION_LOOKUP, question = 'qn_1', lang = "polski"){
   table  %>%
     pivot_longer(cols = polski:english,
                  values_to = "value",

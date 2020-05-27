@@ -1484,3 +1484,123 @@ data_series %>%
   coord_flip() +
   scale_y_continuous(expand = expansion(mult = c(0, .1)))
 ```
+
+# Appendix {.tabset}
+
+## Wykresy
+
+**`r question_show(question = 'qn_34')`**  
+
+```{r appendix-plot-1, fig.height=6, layout="l-body-outset", fig.cap=cap}
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i utraciło źródło dochodu w związku z restrykcajmi wprowadzonymi przez Rząd",
+               compute_number(question = qn_34, response = "Tak") + compute_number(question = qn_34, response = "Nie"),
+               compute_number(question = qn_34, response = "Tak"))
+
+order_faculties <- data_wide %>%
+  filter(!is.na(faculty_label)) %>%
+  group_by(faculty_shortcut) %>%
+  filter(!faculty_shortcut %in% c("MSD UW", "SDNS UW", "SDNH UW", "SDNŚiP UW")) %>%
+  summarise(count = n()) %>%
+  arrange(count) %$%
+  faculty_shortcut
+
+data_wide %>%
+  filter(!is.na(faculty_label)) %>%
+  filter(! faculty_shortcut %in% c("MSD UW", "SDNS UW", "SDNH UW", "SDNŚiP UW")) %>%
+  mutate(label = factor(faculty_shortcut, levels = order_faculties),
+         position = factor(position, levels = c("Szkoła Doktorska", "Studia Doktoranckie" ))) %>%
+  ggplot(aes(x = label, fill = qn_34)) +
+  geom_bar() +
+  theme_classic() +
+  labs(x = "", y = "Liczebność")+ 
+  #annotation_custom(l, xmin = -1, xmax = 4, ymin = 45, ymax = 60) + 
+  #coord_cartesian(clip = "off") +
+  coord_flip() +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+  scale_fill_manual('', values=COLORS[2:1]) +
+  theme(legend.position="bottom")
+```
+
+**`r question_show(question = 'qn_36')`**  
+
+```{r appendix-plot-2, fig.height=6, layout="l-body-outset", fig.cap=cap}
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i obawia się że będzie musiało zrezygnować z doktoratu z powodu nowej sytuacji finansowej",
+               compute_number(question = qn_36, response = "Tak") + compute_number(question = qn_36, response = "Nie"),
+               compute_number(question = qn_36, response = "Tak"))
+
+order_faculties <- data_wide %>%
+  filter(!is.na(faculty_label)) %>%
+  group_by(faculty_shortcut) %>%
+  filter(!faculty_shortcut %in% c("MSD UW", "SDNS UW", "SDNH UW", "SDNŚiP UW")) %>%
+  summarise(count = n()) %>%
+  arrange(count) %$%
+  faculty_shortcut
+
+data_wide %>%
+  filter(!is.na(faculty_label)) %>%
+  filter(! faculty_shortcut %in% c("MSD UW", "SDNS UW", "SDNH UW", "SDNŚiP UW")) %>%
+  mutate(label = factor(faculty_shortcut, levels = order_faculties),
+         position = factor(position, levels = c("Szkoła Doktorska", "Studia Doktoranckie" ))) %>%
+  ggplot(aes(x = label, fill = qn_36)) +
+  geom_bar() +
+  theme_classic() +
+  labs(x = "", y = "Liczebność")+ 
+  #annotation_custom(l, xmin = -1, xmax = 4, ymin = 45, ymax = 60) + 
+  #coord_cartesian(clip = "off") +
+  coord_flip() +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+  scale_fill_manual('',values=COLORS[2:1]) +
+  theme(legend.position="bottom")
+```
+
+## Tabele
+
+**`r question_show(question = 'qn_34')`**
+
+```{r appendix-table-1, fig.height=6, layout="l-body-outset"}
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i utraciło źródło dochodu w związku z restrykcajmi wprowadzonymi przez Rząd",
+               compute_number(question = qn_34, response = "Tak") + compute_number(question = qn_34, response = "Nie"),
+               compute_number(question = qn_34, response = "Tak"))
+
+data_wide %>%
+  filter(!is.na(faculty_label)) %>%
+  filter(! faculty_shortcut %in% c("MSD UW", "SDNS UW", "SDNH UW", "SDNŚiP UW")) %>%
+  mutate(label = factor(faculty_label)) %>%
+  group_by(label, qn_34) %>%
+  summarise(count = n()) %>%
+  pivot_wider(values_from = count, names_from = qn_34) %>%
+  mutate_at(vars(Tak:Nie), ~ifelse(is.na(.), 0, .)) %>%
+  mutate("% Tak" = round(Tak * 100 / sum(Tak, Nie), 2)) %>%
+  rename(Jednostka = label) %>%
+  arrange(desc(Tak)) %>%
+  kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE) %>%
+  footnote(general = "Tabela jest posortowana po liczbie odpowiedzi Tak")
+```
+
+**`r question_show(question = 'qn_36')`**
+
+```{r appendix-table-2, fig.height=6, layout="l-body-outset"}
+cap <- sprintf("Z %i doktorantek i doktorantów aż %i obawia się że będzie musiało zrezygnować z doktoratu z powodu nowej sytuacji finansowej",
+               compute_number(question = qn_36, response = "Tak") + compute_number(question = qn_36, response = "Nie"),
+               compute_number(question = qn_36, response = "Tak"))
+
+data_wide %>%
+  filter(!is.na(faculty_label)) %>%
+  filter(! faculty_shortcut %in% c("MSD UW", "SDNS UW", "SDNH UW", "SDNŚiP UW")) %>%
+  mutate(label = factor(faculty_label)) %>%
+  group_by(label, qn_36) %>%
+  summarise(count = n()) %>%
+  pivot_wider(values_from = count, names_from = qn_36) %>%
+  mutate_at(vars(Tak:Nie), ~ifelse(is.na(.), 0, .)) %>%
+  mutate("% Tak" = round(Tak * 100 / sum(Tak, Nie), 2)) %>%
+  rename(Jednostka = label) %>%
+  arrange(desc(Tak)) %>%
+  kable(caption = cap, "html") %>%
+      kable_styling(bootstrap_options = c("striped","hover"),
+                    font_size = 10,
+                    full_width = TRUE) %>%
+  footnote(general = "Tabela jest posortowana po liczbie odpowiedzi Tak")
+```
